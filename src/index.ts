@@ -1,6 +1,6 @@
 import "angular";
 import "jsonforms";
-import "./controls/sample-control.ts";
+import "./controls/edatatype-control.ts";
 
 import "bootstrap/dist/css/bootstrap.css";
 
@@ -20,7 +20,7 @@ var taskEcore:any =task_data;
 var ecore_schema:any = ecore_jsonschema;
 
 
-angular.module("app", ["jsonforms"]); // , "my"
+angular.module("app", ["jsonforms","ecore.custom.controls"]);
 
 angular.module("app").run(["UiSchemaRegistry", function(UiSchemaRegistry:any) {
     UiSchemaRegistry.register(eattributeview, function (schema:any, data:any){

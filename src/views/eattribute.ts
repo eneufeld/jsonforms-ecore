@@ -21,6 +21,13 @@ export let eattributeview = {
         },
         {
           "type": "Control",
+          "label": "lowerBound",
+          "scope": {
+            "$ref": "#/properties/lowerBound"
+          }
+        },
+        {
+          "type": "Control",
           "label": "upperBound",
           "scope": {
             "$ref": "#/properties/upperBound"
