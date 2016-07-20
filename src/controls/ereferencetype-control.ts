@@ -3,7 +3,7 @@ import "jsonforms";
 import {AbstractControl} from "jsonforms";
 import {IPathResolver,IUISchemaElement} from "jsonforms";
 
-class EDataTypeDirective implements ng.IDirective {
+class EReferenceTypeDirective implements ng.IDirective {
     template = `<jsonforms-control>
     <select id="{{vm.id}}"
               class="form-control jsf-control-enum"
@@ -13,19 +13,13 @@ class EDataTypeDirective implements ng.IDirective {
               <option ng-repeat="option in vm.options" value="{{option.value}}">{{option.name}}</option>
       </select>
     </jsonforms-control>`;
-    controller = EDataTypeControl;
+    controller = EReferenceTypeControl;
     controllerAs = 'vm';
 }
 
-class EDataTypeControl extends AbstractControl {
+class EReferenceTypeControl extends AbstractControl {
     static $inject = ['$scope', 'PathResolver'];
-    private dataTypes = [
-        {value:"http://www.eclipse.org/emf/2002/Ecore#//EBoolean", name:"EBoolean"},
-        {value:"http://www.eclipse.org/emf/2002/Ecore#//EString", name:"EString"},
-        {value:"http://www.eclipse.org/emf/2002/Ecore#//EDate", name:"EDate"},
-        {value:"http://www.eclipse.org/emf/2002/Ecore#//EDouble", name:"EDouble"},
-        {value:"http://www.eclipse.org/emf/2002/Ecore#//EInt", name:"EInt"}
-    ];
+    private dataTypes = [];
     constructor(scope: ng.IScope, pathResolver: IPathResolver) {
         super(scope, pathResolver);
         // evil dirty hack to retrieve all enums
@@ -35,10 +29,10 @@ class EDataTypeControl extends AbstractControl {
             classifiers=data.eClassifiers;
         }
 
-        let enums = classifiers.filter(classifier =>
-            classifier.eClass==="http://www.eclipse.org/emf/2002/Ecore#//EEnum"
+        let eClasses = classifiers.filter(classifier =>
+            classifier.eClass==="http://www.eclipse.org/emf/2002/Ecore#//EClass"
         );
-        enums.forEach(enumValue => this.dataTypes.push({value:enumValue._id,name:enumValue.name}));
+        eClasses.forEach(eclassValue => this.dataTypes.push({value:eclassValue._id,name:eclassValue.name}));
 
     }
     private get options(){
@@ -46,7 +40,7 @@ class EDataTypeControl extends AbstractControl {
     }
 }
 
-let EDataTypeRendererTester = function (element: IUISchemaElement,
+let EReferenceTypeRendererTester = function (element: IUISchemaElement,
                      dataSchema: any, dataObject: any, pathResolver: IPathResolver ) {
 
         if (element.type !== 'Control') {
@@ -56,7 +50,7 @@ let EDataTypeRendererTester = function (element: IUISchemaElement,
         if (currentDataSchema === undefined || currentDataSchema.type !== 'object') {
             return -1;
         }
-        if(element['scope']['$ref'].endsWith('eType') && dataObject.eClass==="http://www.eclipse.org/emf/2002/Ecore#//EAttribute"){
+        if(element['scope']['$ref'].endsWith('eType') && dataObject.eClass==="http://www.eclipse.org/emf/2002/Ecore#//EReference"){
             return 10;
         }
         return -1;
@@ -64,8 +58,8 @@ let EDataTypeRendererTester = function (element: IUISchemaElement,
 
 export default angular
     .module('ecore.custom.controls')
-    .directive('edatatypeControl', () => new EDataTypeDirective())
+    .directive('ereferencetypeControl', () => new EReferenceTypeDirective())
     .run(['RendererService', RendererService => {
-        RendererService.register('edatatype-control', EDataTypeRendererTester)
+        RendererService.register('ereferencetype-control', EReferenceTypeRendererTester)
     }])
     .name;

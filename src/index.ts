@@ -1,12 +1,10 @@
+import "jsonforms/dist/jsonforms.css";
+import "./ecore.css";
 import "angular";
 import "jsonforms";
+angular.module('ecore.custom.controls', ['jsonforms.renderers.controls']);
 import "./controls/edatatype-control.ts";
-
-import "bootstrap/dist/css/bootstrap.css";
-
-import "jsonforms/dist/jsonforms.css";
-import "jsonforms/dist/jsonforms-bootstrap.css";
-
+import "./controls/ereferencetype-control.ts";
 import {task_data} from "./data/task";
 import {ecore_jsonschema} from "./data/ecore";
 import {eattributeview} from "./views/eattribute";
@@ -19,8 +17,18 @@ var taskEcore:any =task_data;
 
 var ecore_schema:any = ecore_jsonschema;
 
-
 angular.module("app", ["jsonforms","ecore.custom.controls"]);
+let template= `<div class="jsf-control" ng-hide="vm.hide" style="display:flex;justify-content:space-between;">
+        <label ng-if="vm.showLabel" for="{{vm.id}}">{{vm.label}}</label>
+    <div style="width:2em;display:flex; flex:1" ng-transclude>
+    </div>
+    <div>
+        <alert ng-repeat="alert in vm.alerts" type="{{alert.type}}" >{{alert.msg}}</alert>
+    </div>
+</div>`;
+
+var app = angular.module('app');
+app.run(['$templateCache', function($templateCache){$templateCache.put('control.html', template)}]);
 
 angular.module("app").run(["UiSchemaRegistry", function(UiSchemaRegistry:any) {
     UiSchemaRegistry.register(eattributeview, function (schema:any, data:any){
