@@ -29,8 +29,14 @@ class MasterDetailController extends AbstractControl {
 		this.selectedSchema = selectedSchema;
 		this.scope['selectedChild'] = selectedChild;
 	}
-	public computeLabel(node){
+	public computeLabel(node) {
 		return node.name||JSON.stringify(node);
+	}
+	public computeIcon(node) {
+		let eClass = node.eClass;
+		let iconName = eClass.substring(eClass.lastIndexOf('//'));
+		return 'icons/' + iconName + '.gif';
+
 	}
 }
 const MasterDetailControlRendererTester = function(element: IUISchemaElement,
@@ -78,7 +84,8 @@ class MasterDetailCollectionDirective implements ng.IDirective {
 	bindToController = {
 		data: '=',
 		schema:'=',
-		label: '='
+		label: '=',
+		icon: '='
 	};
 	scope=true;
 	controller = MasterDetailCollectionController;
@@ -90,7 +97,7 @@ const masterDetailTemplate = `
 <div class="jsf-masterdetail">
     <!-- Master -->
     <div class="jsf-masterdetail-master">
-        <jsonforms-masterdetail-collection2 label="vm.computeLabel"
+        <jsonforms-masterdetail-collection2 label="vm.computeLabel" icon="vm.computeIcon"
                                            data="vm.arrayData" schema="vm.subSchema">
         </jsonforms-masterdetail-collection2>
     </div>
@@ -105,18 +112,21 @@ const masterDetailTemplate = `
 const masterDetailCollectionTemplate = `
 <script type="text/ng-template" id="nodes_renderer.html">
         <div ui-tree-handle class="tree-node tree-node-content" ng-click="md.selectElement(node,currentSchema)">
-            <a ng-if="md.computeArrayKeys(node,key).length!==0" ng-click="md.toggle(this)">
-            	<i class="material-icons" ng-show="collapsed">chevron_right</i>
-            	<i class="material-icons" ng-show="!collapsed">expand_more</i>
-            </a>
-            {{md.label(node)}}
-            <a class="pull-right" ng-click="md.remove(this)">
+        	<span class="expand">
+				<a ng-if="md.computeArrayKeys(node,key).length!==0" ng-click="md.toggle(this)">
+					<i class="material-icons" ng-show="collapsed">chevron_right</i>
+					<i class="material-icons" ng-show="!collapsed">expand_more</i>
+				</a>
+            </span>
+            <span class="tree-node-icon"><img ng-src="{{md.icon(node)}}"></span>
+            <span class="tree-node-label">{{md.label(node)}}</span>
+            <a ng-click="md.remove(this)">
             	<i class="material-icons">clear</i>
             </a>
         </div>
         <div ng-repeat="key in md.computeArrayKeys(node)" ng-init="currentSchema=currentSchema.properties[key].items">
         <ol ui-tree-nodes="" ng-model="node[key]" ng-class="{hidden: collapsed}">
-            <li ng-repeat="node in node[key]" class="clearfix" ui-tree-node ng-include="'nodes_renderer.html'">
+            <li ng-repeat="node in node[key]" ui-tree-node ng-include="'nodes_renderer.html'">
             </li>
         </ol>
     </div>

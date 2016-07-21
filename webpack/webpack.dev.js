@@ -1,6 +1,7 @@
 var loaders = require("./loaders");
 var BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 var webpack = require('webpack');
 module.exports = {
     entry: ['./src/index.ts'],
@@ -32,6 +33,12 @@ module.exports = {
             online: false,
             notify: false
         }),
+        new CopyWebpackPlugin([
+            {
+                from: 'src/icons',
+                to:   'icons'
+            }
+        ]),
         new webpack.ProvidePlugin({
             $: 'jquery',
             jQuery: 'jquery',
