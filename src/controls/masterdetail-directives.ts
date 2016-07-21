@@ -30,10 +30,12 @@ class MasterDetailController extends AbstractControl {
 		this.scope['selectedChild'] = selectedChild;
 	}
 	public computeLabel(node) {
-		return node.name||node.source||node._id||JSON.stringify(node);
+		return node.name||node.source||node.eClass||node._id||JSON.stringify(node);
 	}
 	public computeIcon(node) {
 		let eClass = node.eClass;
+		if(eClass===undefined)
+			return "";
 		let iconName = eClass.substring(eClass.lastIndexOf('//'));
 		return 'icons/' + iconName + '.gif';
 
@@ -59,6 +61,15 @@ class MasterDetailCollectionController {
 	constructor(private scope) {
 	}
 
+	public add(currentElement,possibleFeatures:Array<string>) {
+		// open dialog, select feature
+		if(possibleFeatures.length==1){
+			currentElement[possibleFeatures[0]].push({});
+		}
+		else
+			console.log(possibleFeatures);
+	}
+
 	public remove(scope) {
 		scope.remove();
 	}
@@ -77,7 +88,7 @@ class MasterDetailCollectionController {
 		return this.selectedElement == node;
 	}
 
-	computeArrayKeys(node,oldKey) {
+	computeArrayKeys(node) {
 	var subnodes = [];
 	angular.forEach(node, function (value, key) {
 		if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
@@ -120,30 +131,34 @@ const masterDetailTemplate = `
 const masterDetailCollectionTemplate = `
 <script type="text/ng-template" id="nodes_renderer.html">
         <div ui-tree-handle class="tree-node tree-node-content" ng-class="{'tree-node-selected': md.isElementSelected(node)}" ng-click="md.selectElement(node,currentSchema)">
-        	<span class="expand">
-				<a ng-if="md.computeArrayKeys(node,key).length!==0" ng-click="md.toggle(this)">
+			<span class="expand">
+				<a ng-click="md.toggle(this)" ng-if="arrayKeys.length!==0">
 					<i class="material-icons" ng-show="collapsed">chevron_right</i>
 					<i class="material-icons" ng-show="!collapsed">expand_more</i>
 				</a>
             </span>
             <span class="tree-node-icon"><img ng-src="{{md.icon(node)}}"></span>
-            <span class="tree-node-label">{{md.label(node)}}</span>
+            <span class="tree-node-label">{{md.label(node)}}
+			<a ng-click="md.add(node,arrayKeys)" ng-if="arrayKeys.length!==0">
+            	<i class="material-icons">add</i>
+            </a>
             <a ng-click="md.remove(this)">
             	<i class="material-icons">clear</i>
             </a>
+			</span>
         </div>
-        <div ng-repeat="key in md.computeArrayKeys(node)" ng-init="currentSchema=currentSchema.properties[key].items">
-        <ol ui-tree-nodes="" ng-model="node[key]" ng-class="{hidden: collapsed}">
-            <li ng-repeat="node in node[key]" ui-tree-node ng-include="'nodes_renderer.html'">
-            </li>
-        </ol>
-    </div>
+        <div ng-repeat="key in arrayKeys" ng-init="currentSchema=currentSchema.properties[key].items">
+	        <ol ui-tree-nodes="" ng-model="node[key]" ng-class="{hidden: collapsed}">
+	            <li ng-repeat="node in node[key]" ui-tree-node ng-init= "arrayKeys = md.computeArrayKeys(node)" ng-include="'nodes_renderer.html'">
+	            </li>
+	        </ol>
+	    </div>
 </script>
 <div>
     <div ui-tree id="tree-root" data-drag-enabled="false">
         <div ng-repeat="key in ['']">
         <ol ui-tree-nodes ng-model="md.data" ng-init="currentSchema=md.schema">
-            <li ng-repeat="node in md.data" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+            <li ng-repeat="node in md.data" ui-tree-node ng-init= "arrayKeys = md.computeArrayKeys(node)" ng-include="'nodes_renderer.html'"></li>
         </ol>
         </div>
     </div>
