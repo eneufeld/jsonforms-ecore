@@ -63,7 +63,7 @@ let EDataTypeRendererTester = function (element: IUISchemaElement,
     };
 
 export default angular
-    .module('ecore.custom.controls')
+    .module('app')
     .directive('edatatypeControl', () => new EDataTypeDirective())
     .run(['RendererService', RendererService => {
         RendererService.register('edatatype-control', EDataTypeRendererTester)

@@ -57,7 +57,7 @@ let EReferenceTypeRendererTester = function (element: IUISchemaElement,
     };
 
 export default angular
-    .module('ecore.custom.controls')
+    .module('app')
     .directive('ereferencetypeControl', () => new EReferenceTypeDirective())
     .run(['RendererService', RendererService => {
         RendererService.register('ereferencetype-control', EReferenceTypeRendererTester)
