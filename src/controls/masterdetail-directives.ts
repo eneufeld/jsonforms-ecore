@@ -54,6 +54,8 @@ const MasterDetailControlRendererTester = function(element: IUISchemaElement,
 class MasterDetailCollectionController {
 	static $inject = ['$scope'];
 
+	selectedElement;
+
 	constructor(private scope) {
 	}
 
@@ -66,7 +68,13 @@ class MasterDetailCollectionController {
 	};
 
 	selectElement(node,schema) {
+		this.selectedElement = node;
 		this.scope.select(node, schema);
+
+	}
+
+	isElementSelected(node) {
+		return this.selectedElement == node;
 	}
 
 	computeArrayKeys(node,oldKey) {
@@ -111,7 +119,7 @@ const masterDetailTemplate = `
 
 const masterDetailCollectionTemplate = `
 <script type="text/ng-template" id="nodes_renderer.html">
-        <div ui-tree-handle class="tree-node tree-node-content" ng-click="md.selectElement(node,currentSchema)">
+        <div ui-tree-handle class="tree-node tree-node-content" ng-class="{'tree-node-selected': md.isElementSelected(node)}" ng-click="md.selectElement(node,currentSchema)">
         	<span class="expand">
 				<a ng-if="md.computeArrayKeys(node,key).length!==0" ng-click="md.toggle(this)">
 					<i class="material-icons" ng-show="collapsed">chevron_right</i>

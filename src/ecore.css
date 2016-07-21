@@ -53,9 +53,9 @@ background: linear-gradient(red, yellow)
     min-height: 18px;
 }
 
-/*.tree-node-content {
-    padding: 2px;
-}*/
+.tree-node-selected {
+    background: #f4f6f7;
+}
 
 .material-icons {
     font-size: 16px;
