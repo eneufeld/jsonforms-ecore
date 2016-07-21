@@ -20,7 +20,9 @@ background: linear-gradient(red, yellow)
 .tree-node-icon {
    height: 18px;
 }
-
+.tree-node-icon:after{
+    content: '\00a0';
+}
 .tree-node a {
     height: 16px;
 }
@@ -65,4 +67,12 @@ background: linear-gradient(red, yellow)
 }
 .angular-ui-tree-nodes .angular-ui-tree-nodes {
     padding-left: 16px;
+}
+
+.jsf-masterdetail {
+    height: 100vh;
+    overflow: auto;;
+}
+.jsf-masterdetail > div {
+    overflow: inherit;
 }
