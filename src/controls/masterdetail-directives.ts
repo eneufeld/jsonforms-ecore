@@ -105,15 +105,14 @@ const masterDetailTemplate = `
 const masterDetailCollectionTemplate = `
 <script type="text/ng-template" id="nodes_renderer.html">
         <div ui-tree-handle class="tree-node tree-node-content" ng-click="md.selectElement(node,currentSchema)">
-            <a class="btn btn-success btn-xs" ng-if="md.computeArrayKeys(node,key).length!==0" ng-click="md.toggle(this)"><span
-                    class="glyphicon"
-                    ng-class="{
-              'glyphicon-chevron-right': collapsed,
-              'glyphicon-chevron-down': !collapsed
-            }"></span></a>
+            <a ng-if="md.computeArrayKeys(node,key).length!==0" ng-click="md.toggle(this)">
+            	<i class="material-icons" ng-show="collapsed">chevron_right</i>
+            	<i class="material-icons" ng-show="!collapsed">expand_more</i>
+            </a>
             {{md.label(node)}}
-            <a class="pull-right btn btn-danger btn-xs" ng-click="md.remove(this)"><span
-                    class="glyphicon glyphicon-remove"></span></a>
+            <a class="pull-right" ng-click="md.remove(this)">
+            	<i class="material-icons">clear</i>
+            </a>
         </div>
         <div ng-repeat="key in md.computeArrayKeys(node)" ng-init="currentSchema=currentSchema.properties[key].items">
         <ol ui-tree-nodes="" ng-model="node[key]" ng-class="{hidden: collapsed}">

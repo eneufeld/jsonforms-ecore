@@ -1,11 +1,10 @@
-import "bootstrap/dist/css/bootstrap.css";
 import "angular-ui-tree/dist/angular-ui-tree.css";
 import "jsonforms/dist/jsonforms.css";
 import "./ecore.css";
 import "angular";
 import "jsonforms";
 import "angular-ui-tree";
-angular.module("app", ["jsonforms",'ui.tree']);
+angular.module("app", ["jsonforms", "ui.tree"]);
 import "./controls/edatatype-control.ts";
 import "./controls/ereferencetype-control.ts";
 import "./controls/masterdetail-directives.ts";
