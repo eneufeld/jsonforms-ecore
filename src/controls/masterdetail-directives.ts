@@ -30,7 +30,7 @@ class MasterDetailController extends AbstractControl {
 		this.scope['selectedChild'] = selectedChild;
 	}
 	public computeLabel(node) {
-		return node.name||JSON.stringify(node);
+		return node.name||node.source||node._id||JSON.stringify(node);
 	}
 	public computeIcon(node) {
 		let eClass = node.eClass;
