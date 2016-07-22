@@ -3,113 +3,129 @@ import {IPathResolver} from 'jsonforms';
 import {AbstractControl} from 'jsonforms';
 import {SchemaElement} from 'jsonforms';
 import {IUISchemaElement} from 'jsonforms';
+import {FeatureToTypeMapper, FeatureClass} from './util';
 
 class MasterDetailDirective implements ng.IDirective {
-	restrict = 'E';
-	templateUrl = 'masterdetail.html';
-	controller = MasterDetailController;
-	controllerAs = 'vm';
+    restrict = 'E';
+    templateUrl = 'masterdetail.html';
+    controller = MasterDetailController;
+    controllerAs = 'vm';
 }
 interface MasterDetailControllerScope extends ng.IScope {
 }
 class MasterDetailController extends AbstractControl {
-	static $inject = ['$scope', 'PathResolver'];
-	private subSchema: SchemaElement;
-	private selectedChild: any;
-	private selectedSchema: SchemaElement;
-	private arrayData;
-	constructor(scope: MasterDetailControllerScope, pathResolver: IPathResolver) {
-		super(scope, pathResolver);
-		this.scope['select'] = (child, schema) => this.select(child, schema);
-		this.subSchema = this.pathResolver.resolveSchema(this.schema, this.schemaPath);
-		this.arrayData=[this.data];
-	}
-	public select(selectedChild: any, selectedSchema: SchemaElement) {
-		this.selectedChild = selectedChild;
-		this.selectedSchema = selectedSchema;
-		this.scope['selectedChild'] = selectedChild;
-	}
-	public computeLabel(node) {
-		return node.name||node.source||node.eClass||node._id||JSON.stringify(node);
-	}
-	public computeIcon(node) {
-		let eClass = node.eClass;
-		if(eClass===undefined)
-			return "";
-		let iconName = eClass.substring(eClass.lastIndexOf('//'));
-		return 'icons/' + iconName + '.gif';
+    static $inject = ['$scope', 'PathResolver'];
+    private subSchema: SchemaElement;
+    private selectedChild: any;
+    private selectedSchema: SchemaElement;
+    private arrayData;
+    constructor(scope: MasterDetailControllerScope, pathResolver: IPathResolver) {
+        super(scope, pathResolver);
+        this.scope['select'] = (child, schema) => this.select(child, schema);
+        this.subSchema = this.pathResolver.resolveSchema(this.schema, this.schemaPath);
+        this.arrayData = [this.data];
+    }
+    public select(selectedChild: any, selectedSchema: SchemaElement) {
+        this.selectedChild = selectedChild;
+        this.selectedSchema = selectedSchema;
+        this.scope['selectedChild'] = selectedChild;
+    }
+    public computeLabel(node) {
+        return node.name || node.source || node.eClass || node._id || JSON.stringify(node);
+    }
+    public computeIcon(node) {
+        let eClass = node.eClass;
+        if (eClass === undefined)
+            return "";
+        let iconName = eClass.substring(eClass.lastIndexOf('//'));
+        return 'icons/' + iconName + '.gif';
 
-	}
+    }
 }
 const MasterDetailControlRendererTester = function(element: IUISchemaElement,
-																   dataSchema: any,
-																   dataObject: any,
-																   pathResolver: IPathResolver) {
-	if (element.type === 'MasterDetailLayout'
-		&& dataSchema !== undefined
-		&& dataSchema.type === 'object') {
-		return 3;
-	}
-	return -1;
+    dataSchema: any,
+    dataObject: any,
+    pathResolver: IPathResolver) {
+    if (element.type === 'MasterDetailLayout'
+        && dataSchema !== undefined
+        && dataSchema.type === 'object') {
+        return 3;
+    }
+    return -1;
 };
 
 class MasterDetailCollectionController {
-	static $inject = ['$scope'];
+    static $inject = ['$scope'];
 
-	selectedElement;
+    private selectedElement;
 
-	constructor(private scope) {
+    constructor(private scope) {
+    }
+
+	public getClassFeatureMap(currentElement, schema) {
+		let possibleFeatures: Array<string>=this.getPossibleChildren(schema);
+        let classes = FeatureToTypeMapper.getPossibleTypes(possibleFeatures);
+		return classes;
 	}
 
-	public add(currentElement,possibleFeatures:Array<string>) {
-		// open dialog, select feature
-		if(possibleFeatures.length==1){
-			currentElement[possibleFeatures[0]].push({});
+    public add() {
+        // open dialog, select feature
+    }
+	public canHaveChildren(schema) : boolean{
+		return this.getPossibleChildren(schema).length!==0;
+	}
+
+	private getPossibleChildren(schema) :Array<string>{
+		let result: Array<string>=[];
+		let schemaProperties  = schema.properties;
+		for(let property in schemaProperties){
+			if (schemaProperties[property].type === 'array' && schemaProperties[property].items.type === 'object') {
+                result.push(property);
+            }
 		}
-		else
-			console.log(possibleFeatures);
+		return result;
 	}
 
-	public remove(scope) {
-		scope.remove();
-	}
+    public remove(scope) {
+        scope.remove();
+    }
 
-	toggle(scope) {
-		scope.toggle();
-	};
+    public toggle(scope) {
+        scope.toggle();
+    };
 
-	selectElement(node,schema) {
-		this.selectedElement = node;
-		this.scope.select(node, schema);
+    public selectElement(node, schema) {
+        this.selectedElement = node;
+        this.scope.select(node, schema);
 
-	}
+    }
 
-	isElementSelected(node) {
-		return this.selectedElement == node;
-	}
+    public isElementSelected(node) {
+        return this.selectedElement == node;
+    }
 
-	computeArrayKeys(node) {
-	var subnodes = [];
-	angular.forEach(node, function (value, key) {
-		if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
-			subnodes.push(key);
-		}
-	});
-	return subnodes;
-	};
+    public computeArrayKeys(node) {
+        var subnodes = [];
+        angular.forEach(node, function(value, key) {
+            if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+                subnodes.push(key);
+            }
+        });
+        return subnodes;
+    };
 }
 class MasterDetailCollectionDirective implements ng.IDirective {
-	restrict = 'E';
-	bindToController = {
-		data: '=',
-		schema:'=',
-		label: '=',
-		icon: '='
-	};
-	scope=true;
-	controller = MasterDetailCollectionController;
-	templateUrl = 'directive.html';
-	controllerAs = 'md';
+    restrict = 'E';
+    bindToController = {
+        data: '=',
+        schema: '=',
+        label: '=',
+        icon: '='
+    };
+    scope = true;
+    controller = MasterDetailCollectionController;
+    templateUrl = 'masterdetail_tree.html';
+    controllerAs = 'md';
 }
 
 const masterDetailTemplate = `
@@ -139,7 +155,7 @@ const masterDetailCollectionTemplate = `
             </span>
             <span class="tree-node-icon"><img ng-src="{{md.icon(node)}}"></span>
             <span class="tree-node-label">{{md.label(node)}}
-			<a ng-click="md.add(node,arrayKeys)" ng-if="arrayKeys.length!==0">
+			<a ng-click="md.add(node,currentSchema)" ng-if="md.canHaveChildren(currentSchema)">
             	<i class="material-icons">add</i>
             </a>
             <a ng-click="md.remove(this)">
@@ -165,16 +181,16 @@ const masterDetailCollectionTemplate = `
 </div>`;
 
 export default angular
-	.module('app')
-	.directive('masterDetail2', () => new MasterDetailDirective())
-	.run(['RendererService', RendererService =>
-		RendererService.register('master-detail2', MasterDetailControlRendererTester)
-	])
-	.run(['$templateCache', $templateCache => {
-		$templateCache.put('masterdetail.html', masterDetailTemplate);
-	}])
-	.directive('jsonformsMasterdetailCollection2', () => new MasterDetailCollectionDirective())
-	.run(['$templateCache', $templateCache => {
-		$templateCache.put('directive.html', masterDetailCollectionTemplate);
-	}])
-	.name;
+    .module('app')
+    .directive('masterDetail2', () => new MasterDetailDirective())
+    .run(['RendererService', RendererService =>
+        RendererService.register('master-detail2', MasterDetailControlRendererTester)
+    ])
+    .run(['$templateCache', $templateCache => {
+        $templateCache.put('masterdetail.html', masterDetailTemplate);
+    }])
+    .directive('jsonformsMasterdetailCollection2', () => new MasterDetailCollectionDirective())
+    .run(['$templateCache', $templateCache => {
+        $templateCache.put('masterdetail_tree.html', masterDetailCollectionTemplate);
+    }])
+    .name;
