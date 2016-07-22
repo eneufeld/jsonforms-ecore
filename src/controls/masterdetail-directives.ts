@@ -82,7 +82,7 @@ class MasterDetailCollectionController {
 		return this.getPossibleChildren(schema).length !== 0;
 	}
 
-	private getPossibleChildren(schema):Array<string> {
+	public getPossibleChildren(schema):Array<string> {
 		let result: Array<string> = [];
 		let schemaProperties = schema.properties;
 		for (let property in schemaProperties) {
@@ -118,17 +118,29 @@ class MasterDetailCollectionController {
     }
 
     public showAddOverlay() {
-        this.computeClassFeatureMap(this.currentSchema);
+        this.currentClassFeatureMap = this.computeClassFeatureMap(this.currentSchema);
         this.ngDialog.open({ template: 'addDialog', scope: this.scope, className: 'ngdialog-theme-default' });
     }
 
     private computeClassFeatureMap(schema) {
         let possibleFeatures: Array<string> = this.getPossibleChildren(schema);
-        this.currentClassFeatureMap = FeatureToTypeMapper.getPossibleTypes(possibleFeatures);
+        return FeatureToTypeMapper.getPossibleTypes(possibleFeatures);
     }
 
     public getCurrentClassFeatureMap() {
         return this.currentClassFeatureMap;
+    }
+
+    public hasChildren(node, arrayKeys): boolean {
+        for (var i = 0; i < arrayKeys.length; i++) {
+            let key = arrayKeys[i];
+            if (node[key] && node[key].length > 0) {
+                console.log(node);
+                console.log('hola');
+                return true;
+            }
+        }
+        return false;
     }
 
     public computeArrayKeys(schema) {
@@ -175,7 +187,7 @@ const masterDetailCollectionTemplate = `
 <script type="text/ng-template" id="nodes_renderer.html">
         <div ui-tree-handle class="tree-node tree-node-content" ng-class="{'tree-node-selected': md.isElementSelected(node)}" ng-click="md.selectElement(node,currentSchema)">
 			<span class="expand">
-				<a ng-click="md.toggle(this)" ng-if="arrayKeys.length!==0">
+				<a ng-click="md.toggle(this)" ng-if="md.hasChildren(node, arrayKeys)">
 					<i class="material-icons" ng-show="collapsed">chevron_right</i>
 					<i class="material-icons" ng-show="!collapsed">expand_more</i>
 				</a>
@@ -198,7 +210,8 @@ const masterDetailCollectionTemplate = `
 	    </div>
 </script>
 <script type="text/ng-template" id="addDialog">
-    <div class="tree-node tree-node-content" ng-repeat="featureClass in md.getCurrentClassFeatureMap()" ng-click="md.addChild(featureClass.feature, featureClass.eClass); closeThisDialog()">
+    <!--TODO: create own css classes instead of reusing the ui-tree classes-->
+    <div class="tree-node tree-node-content angular-ui-tree-handle" ng-repeat="featureClass in md.getCurrentClassFeatureMap()" ng-click="md.addChild(featureClass.feature, featureClass.eClass); closeThisDialog()">
         <span class="tree-node-icon"><img ng-src="{{md.icon({ eClass: featureClass.eClass })}}"></span>
         <span class="tree-node-label">{{md.label({ eClass: featureClass.eClass })}}</span>
     </div>
