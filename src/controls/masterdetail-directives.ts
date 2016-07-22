@@ -30,9 +30,11 @@ class MasterDetailController extends AbstractControl {
         this.selectedSchema = selectedSchema;
         this.scope['selectedChild'] = selectedChild;
     }
+
     public computeLabel(node) {
-        return node.name || node.source || node.eClass || node._id || JSON.stringify(node);
+        return node.name || node.source || (node.eClass && node.eClass.substring(node.eClass.lastIndexOf('//') + 2)) || node._id || JSON.stringify(node);
     }
+
     public computeIcon(node) {
         let eClass = node.eClass;
         if (eClass === undefined)
@@ -55,30 +57,35 @@ const MasterDetailControlRendererTester = function(element: IUISchemaElement,
 };
 
 class MasterDetailCollectionController {
-    static $inject = ['$scope'];
+    static $inject = ['$scope', 'ngDialog'];
 
     private selectedElement;
+    private currentSchema;
+    private currentClassFeatureMap;
 
-    constructor(private scope) {
+    constructor(private scope, private ngDialog) {
     }
 
-	public getClassFeatureMap(currentElement, schema) {
-		let possibleFeatures: Array<string>=this.getPossibleChildren(schema);
-        let classes = FeatureToTypeMapper.getPossibleTypes(possibleFeatures);
-		return classes;
-	}
-
-    public add() {
-        // open dialog, select feature
+    public getSelectedElement() {
+        return this.selectedElement;
     }
-	public canHaveChildren(schema) : boolean{
-		return this.getPossibleChildren(schema).length!==0;
+
+    public addChild(feature, eClass) { // to selectedElement
+        if (!this.selectedElement[feature]) {
+            this.selectedElement[feature] = [];
+        }
+        let newNode = { eClass: eClass };
+        this.selectedElement[feature].push(newNode);
+    }
+
+	public canHaveChildren(schema): boolean {
+		return this.getPossibleChildren(schema).length !== 0;
 	}
 
-	private getPossibleChildren(schema) :Array<string>{
-		let result: Array<string>=[];
-		let schemaProperties  = schema.properties;
-		for(let property in schemaProperties){
+	private getPossibleChildren(schema):Array<string> {
+		let result: Array<string> = [];
+		let schemaProperties = schema.properties;
+		for (let property in schemaProperties) {
 			if (schemaProperties[property].type === 'array' && schemaProperties[property].items.type === 'object') {
                 result.push(property);
             }
@@ -86,8 +93,12 @@ class MasterDetailCollectionController {
 		return result;
 	}
 
-    public remove(scope) {
+    public remove(scope, key) {
         scope.remove();
+        let parentNode = scope.$parentNodeScope.$modelValue;
+        if (parentNode[key].length === 0) {
+            delete parentNode[key];
+        }
     }
 
     public toggle(scope) {
@@ -95,23 +106,39 @@ class MasterDetailCollectionController {
     };
 
     public selectElement(node, schema) {
-        this.selectedElement = node;
-        this.scope.select(node, schema);
-
+        if (this.selectedElement !== node) {
+            this.selectedElement = node;
+            this.currentSchema = schema;
+            this.scope.select(node, schema);
+        }
     }
 
     public isElementSelected(node) {
-        return this.selectedElement == node;
+        return this.selectedElement === node;
     }
 
-    public computeArrayKeys(node) {
-        var subnodes = [];
-        angular.forEach(node, function(value, key) {
-            if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
-                subnodes.push(key);
+    public showAddOverlay() {
+        this.computeClassFeatureMap(this.currentSchema);
+        this.ngDialog.open({ template: 'addDialog', scope: this.scope, className: 'ngdialog-theme-default' });
+    }
+
+    private computeClassFeatureMap(schema) {
+        let possibleFeatures: Array<string> = this.getPossibleChildren(schema);
+        this.currentClassFeatureMap = FeatureToTypeMapper.getPossibleTypes(possibleFeatures);
+    }
+
+    public getCurrentClassFeatureMap() {
+        return this.currentClassFeatureMap;
+    }
+
+    public computeArrayKeys(schema) {
+        var keys = [];
+        angular.forEach(schema.properties, function(value, key) {
+            if (value.type === 'array' && value.items.type === 'object') {
+                keys.push(key);
             }
         });
-        return subnodes;
+        return keys;
     };
 }
 class MasterDetailCollectionDirective implements ng.IDirective {
@@ -155,28 +182,32 @@ const masterDetailCollectionTemplate = `
             </span>
             <span class="tree-node-icon"><img ng-src="{{md.icon(node)}}"></span>
             <span class="tree-node-label">{{md.label(node)}}
-			<a ng-click="md.add(node,currentSchema)" ng-if="md.canHaveChildren(currentSchema)">
+			<a ng-click="md.selectElement(node, currentSchema); md.showAddOverlay()" ng-if="md.canHaveChildren(currentSchema)">
             	<i class="material-icons">add</i>
             </a>
-            <a ng-click="md.remove(this)">
+            <a ng-click="md.remove(this, key)">
             	<i class="material-icons">clear</i>
             </a>
 			</span>
         </div>
         <div ng-repeat="key in arrayKeys" ng-init="currentSchema=currentSchema.properties[key].items">
 	        <ol ui-tree-nodes="" ng-model="node[key]" ng-class="{hidden: collapsed}">
-	            <li ng-repeat="node in node[key]" ui-tree-node ng-init= "arrayKeys = md.computeArrayKeys(node)" ng-include="'nodes_renderer.html'">
+	            <li ng-repeat="node in node[key]" ui-tree-node ng-init= "arrayKeys = md.computeArrayKeys(currentSchema)" ng-include="'nodes_renderer.html'">
 	            </li>
 	        </ol>
 	    </div>
 </script>
+<script type="text/ng-template" id="addDialog">
+    <div class="tree-node tree-node-content" ng-repeat="featureClass in md.getCurrentClassFeatureMap()" ng-click="md.addChild(featureClass.feature, featureClass.eClass); closeThisDialog()">
+        <span class="tree-node-icon"><img ng-src="{{md.icon({ eClass: featureClass.eClass })}}"></span>
+        <span class="tree-node-label">{{md.label({ eClass: featureClass.eClass })}}</span>
+    </div>
+</script>
 <div>
     <div ui-tree id="tree-root" data-drag-enabled="false">
-        <div ng-repeat="key in ['']">
         <ol ui-tree-nodes ng-model="md.data" ng-init="currentSchema=md.schema">
-            <li ng-repeat="node in md.data" ui-tree-node ng-init= "arrayKeys = md.computeArrayKeys(node)" ng-include="'nodes_renderer.html'"></li>
+            <li ng-repeat="node in md.data" ui-tree-node ng-init= "arrayKeys = md.computeArrayKeys(currentSchema)" ng-include="'nodes_renderer.html'"></li>
         </ol>
-        </div>
     </div>
 </div>`;
 

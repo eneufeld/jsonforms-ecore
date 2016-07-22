@@ -15,7 +15,8 @@
     "angular-ui-tree": "~2.16.0",
     "copy-webpack-plugin": "~3.0.1",
     "jquery": "2.2.4",
-    "jsonforms": "0.0.24"
+    "jsonforms": "0.0.24",
+    "ng-dialog": "~0.6.2"
   },
   "devDependencies": {
     "browser-sync": "2.12.8",

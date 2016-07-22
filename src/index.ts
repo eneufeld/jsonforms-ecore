@@ -1,10 +1,13 @@
 import "angular-ui-tree/dist/angular-ui-tree.css";
+import "ng-dialog/css/ngDialog.css";
+import "ng-dialog/css/ngDialog-theme-default.css";
 import "jsonforms/dist/jsonforms.css";
 import "./ecore.css";
 import "angular";
 import "jsonforms";
 import "angular-ui-tree";
-angular.module("app", ["jsonforms", "ui.tree"]);
+import "ng-dialog";
+angular.module("app", ["jsonforms", "ui.tree", "ngDialog"]);
 import "./controls/edatatype-control.ts";
 import "./controls/ereferencetype-control.ts";
 import "./controls/masterdetail-directives.ts";
